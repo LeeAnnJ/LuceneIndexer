@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Main-Class: Test
+Class-Path: lucene-join-9.9.1.jar lucene-memory-9.9.1.jar lucene-replica
+ tor-9.9.1.jar lucene-luke-9.9.1.jar lucene-benchmark-9.9.1.jar lucene-m
+ onitor-9.9.1.jar lucene-analysis-stempel-9.9.1.jar lucene-expressions-9
+ .9.1.jar lucene-analysis-phonetic-9.9.1.jar lucene-analysis-common-9.9.
+ 1.jar lucene-suggest-9.9.1.jar lucene-analysis-smartcn-9.9.1.jar lucene
+ -demo-9.9.1.jar lucene-sandbox-9.9.1.jar lucene-misc-9.9.1.jar lucene-f
+ acet-9.9.1.jar lucene-codecs-9.9.1.jar lucene-queryparser-9.9.1.jar luc
+ ene-grouping-9.9.1.jar lucene-test-framework-9.9.1.jar lucene-analysis-
+ opennlp-9.9.1.jar lucene-queries-9.9.1.jar lucene-analysis-nori-9.9.1.j
+ ar lucene-core-9.9.1.jar lucene-analysis-kuromoji-9.9.1.jar lucene-high
+ lighter-9.9.1.jar lucene-analysis-morfologik-9.9.1.jar lucene-classific
+ ation-9.9.1.jar lucene-spatial3d-9.9.1.jar lucene-backward-codecs-9.9.1
+ .jar json-20231013.jar lucene-analysis-icu-9.9.1.jar lucene-spatial-ext
+ ras-9.9.1.jar
+

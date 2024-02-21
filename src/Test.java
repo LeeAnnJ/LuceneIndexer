@@ -11,7 +11,7 @@ public class Test {
              System.out.println("Arg0:" + args[0]);
          if(args.length>=2)
              System.out.println("Arg1:"+args[1]);
-        // todo: 打包成jar包
+
 //        Properties properties = new Properties();
 //        try {
 //            properties.load(new FileInputStream("../config/file_structure.ini"));

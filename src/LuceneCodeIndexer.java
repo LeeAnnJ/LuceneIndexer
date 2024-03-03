@@ -1,35 +1,14 @@
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Properties;
-import java.util.concurrent.TransferQueue;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.DocumentBuilder;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StoredField;
-import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -38,6 +17,18 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Properties;
 
 public class LuceneCodeIndexer {
     private static String config_file = "./config/file_structure.ini";
@@ -227,8 +218,7 @@ public class LuceneCodeIndexer {
             exp_path = properties.getProperty("EXP_PATH");
             // eval_path = "/home/zhangn279/laj/CK4TI/Evaluation";
             code_xml_dir = exp_path + properties.getProperty("SO_CODE_FOLDER");
-            // todo: check index path
-            index_dir = exp_path + "/Code_Lucene_Index";
+            index_dir = exp_path + properties.getProperty("CODE_LUCENE_INDEX");
         } catch (IOException e) {
             e.printStackTrace();
         }

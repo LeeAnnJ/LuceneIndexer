@@ -9,11 +9,9 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.*;
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -28,6 +26,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Locale;
 import java.util.Properties;
 
 public class LuceneCodeIndexer {
@@ -125,7 +124,6 @@ public class LuceneCodeIndexer {
             f.mkdirs();
         try {
             System.out.println("Search for query: " + query_file);
-
             IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index_path)));
             IndexSearcher searcher = new IndexSearcher(reader);
             // use BM25 as the similarity function
@@ -136,8 +134,14 @@ public class LuceneCodeIndexer {
             String query_code = readFileAsString(query_file);
             // query for top-k similar code snippets
             String escaped_query_code = QueryParser.escape(query_code);
-            Query query = parser.parse(escaped_query_code); // escape the special characters in the query code, in case
-                                                            // it will be parsed as syntax element of Lucene query
+            Query query;
+            try {
+                query = parser.parse(escaped_query_code); // escape the special characters in the query code, in case
+                                                                // it will be parsed as syntax element of Lucene query
+            } catch (ParseException e ){
+                escaped_query_code = escaped_query_code.substring(0, 4096);
+                query = parser.parse(escaped_query_code);
+            }
             TopDocs results = searcher.search(query, k);
             long hit_num = Math.min(k, results.totalHits.value);
             System.out.println(results.totalHits + " total matching code snippets");

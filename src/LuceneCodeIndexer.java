@@ -119,9 +119,6 @@ public class LuceneCodeIndexer {
      *                    query.
      */
     public static void search(String index_path, String query_file, int k, boolean saveScore, String res_path) {
-        File f = new File(res_path);
-        if (!f.exists())
-            f.mkdirs();
         try {
             System.out.println("Search for query: " + query_file);
             IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index_path)));
@@ -173,8 +170,8 @@ public class LuceneCodeIndexer {
             // bw.write(topks.trim());
 
             // write the top-k similar code snippets to a directory
-            String save_dir = res_path + "/" + Paths.get(query_file).getFileName().toString().replace(".java", "");
-            Path dirPath = Paths.get(save_dir);
+            String save_dir = res_path; // + "/" + Paths.get(query_file).getFileName().toString().replace(".java", "");
+            Path dirPath = Paths.get(res_path);
             if (!Files.exists(dirPath)) {
                 Files.createDirectories(dirPath);
             } else {

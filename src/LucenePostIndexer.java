@@ -31,12 +31,14 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Properties;
+import java.nio.charset.StandardCharsets;
 
 public class LucenePostIndexer {
     private static String config_file = "./config/file_structure.ini";
     private static String exp_path = "";
     private static String post_dump_dic = "";
     private static String index_dir = "";
+
     public static void buildIndex4Posts(String posts_path, String index_path) {
         // judge if the path is a directory
         final Path docDir = Paths.get(posts_path);
@@ -186,9 +188,9 @@ public class LucenePostIndexer {
     /**
      * Search the post content by PostId, including question, answer and comment.
      * 
-     * @param PostId:       the id of the post.
-     * @param index_path:   the path that contains the Lucene index built for codes.
-     * @param res_dir:     the path to store the post content (in json format).
+     * @param PostId:     the id of the post.
+     * @param index_path: the path that contains the Lucene index built for codes.
+     * @param res_dir:    the path to store the post content (in json format).
      */
     public static void search(int PostId, String index_path, String res_dir) {
         try {
@@ -242,7 +244,7 @@ public class LucenePostIndexer {
             Post.put("Answers", Answers);
 
             String save_json = res_dir + "/" + PostId + ".json";
-            FileWriter file = new FileWriter(save_json);
+            FileWriter file = new FileWriter(save_json, StandardCharsets.UTF_8);
             file.write(Post.toString());
             file.close();
             System.out.println("Successfully saved JSON Object to:" + save_json);
@@ -275,6 +277,7 @@ public class LucenePostIndexer {
         return Comments;
 
     }
+
     protected static void read_config() throws Exception {
         Properties properties = new Properties();
         try {
@@ -289,37 +292,36 @@ public class LucenePostIndexer {
 
     /**
      * offline version:
-     *     build lucene index for posts from SO.
+     * build lucene index for posts from SO.
      * online version:
-     *     given a post_id, search related content of the post by lucene index,
-     *     including question, answer and comments
-     *     then save a json object as the result to a file.
-     *     **need arguments**:
-     *     - post_id: id of the post
-     *     - result_folder: path of the file saving the result
+     * given a post_id, search related content of the post by lucene index,
+     * including question, answer and comments
+     * then save a json object as the result to a file.
+     * **need arguments**:
+     * - post_id: id of the post
+     * - result_folder: path of the file saving the result
      */
     public static void main(String[] args) throws Exception {
         long start = 0l, end = 0l;
         read_config();
         int arg_len = args.length;
-        if(arg_len<1) {
+        if (arg_len < 1) {
             throw new IllegalArgumentException("class must has at least one argument!");
         }
         String mode = args[0];
-        if(mode.equals("-offline")){
+        if (mode.equals("-offline")) {
             // Step 1: build index for Posts
-             start = System.currentTimeMillis();
-             buildIndex4Posts(post_dump_dic, index_dir);
-             end = System.currentTimeMillis();
-             System.out.println("Time Cost:" + (end - start) + "ms"); // 319597ms (5.33min)
-        }
-        else if (mode.equals("-online")) {
+            start = System.currentTimeMillis();
+            buildIndex4Posts(post_dump_dic, index_dir);
+            end = System.currentTimeMillis();
+            System.out.println("Time Cost:" + (end - start) + "ms"); // 319597ms (5.33min)
+        } else if (mode.equals("-online")) {
             // Step 2: get post content by PostId
             // hibernate_class_1:520902; hibernate_class_4:970573;
-            if(arg_len<2) {
+            if (arg_len < 2) {
                 throw new IllegalArgumentException("missing argument: post_id");
             }
-            if(arg_len<3){
+            if (arg_len < 3) {
                 throw new IllegalArgumentException("missing argument: result_folder");
             }
             int PostId = Integer.parseInt(args[1]);
@@ -328,9 +330,8 @@ public class LucenePostIndexer {
             start = System.currentTimeMillis();
             search(PostId, index_dir, res_path);
             end = System.currentTimeMillis();
-//            System.out.println("Time Cost:" + (end - start) + "ms"); // 1175ms
-        }
-        else{
+            // System.out.println("Time Cost:" + (end - start) + "ms"); // 1175ms
+        } else {
             throw new IllegalArgumentException("invalid argument!");
         }
     }

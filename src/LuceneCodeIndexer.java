@@ -23,7 +23,9 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Locale;
@@ -134,8 +136,8 @@ public class LuceneCodeIndexer {
             Query query;
             try {
                 query = parser.parse(escaped_query_code); // escape the special characters in the query code, in case
-                                                                // it will be parsed as syntax element of Lucene query
-            } catch (ParseException e ){
+                                                          // it will be parsed as syntax element of Lucene query
+            } catch (ParseException e) {
                 escaped_query_code = escaped_query_code.substring(0, 4096);
                 query = parser.parse(escaped_query_code);
             }
@@ -195,8 +197,7 @@ public class LuceneCodeIndexer {
 
                 String fileName = codeId + "_" + postId + "_" + hits[i].score / maxscore + ".java";
                 Path filePath = Paths.get(save_dir, fileName);
-
-                Files.write(filePath, code.getBytes());
+                Files.write(filePath, code.getBytes(StandardCharsets.UTF_8));
             }
             // print the save_dir
             System.out.println("Save top-k similar code snippets to: " + save_dir);

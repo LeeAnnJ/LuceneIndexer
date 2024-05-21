@@ -250,8 +250,7 @@ public class LuceneCodeIndexer {
             start = System.currentTimeMillis();
             buildIndex4CodeXmls(code_xml_dir, index_dir);
             end = System.currentTimeMillis();
-            System.out.println("Time Cost:" + (end - start) + "ms"); // Time
-            // Cost:362714ms
+            System.out.println("Time Cost:" + (end - start) + "ms"); // Time Cost:362714ms
         } else if (mode.equals("-online")) {
             // Step 2: search for the top k similar code snippets for queries
             if (arg_len < 2) {

@@ -15,8 +15,6 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -27,34 +25,32 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Properties;
-import java.nio.charset.StandardCharsets;
 
 public class LucenePostIndexer {
     private static String config_file = "./config/file_structure.ini";
     private static String exp_path = "";
     private static String post_dump_dic = "";
     private static String index_dir = "";
+    private static boolean split_QA = true;
 
     public static void buildIndex4Posts(String posts_path, String index_path) {
         // judge if the path is a directory
         final Path docDir = Paths.get(posts_path);
-        if (!Files.isDirectory(docDir))
-            return;
+        if (!Files.isDirectory(docDir)) return;
 
         // create the index directory
         File f = new File(index_path);
-        if (!f.exists())
-            f.mkdirs();
+        if (!f.exists()) f.mkdirs();
 
         // create the path dictionary
         HashMap<String, String> pathDict = new HashMap<>();
         pathDict.put("question", posts_path + "/questions");
         pathDict.put("answer", posts_path + "/answers");
-        pathDict.put("comment", posts_path + "/comments");
 
         // index all Posts files
         try {
@@ -73,9 +69,6 @@ public class LucenePostIndexer {
                                 break;
                             case "answer":
                                 indexAnswerXml(writer, file);
-                                break;
-                            case "comment":
-                                indexCommentXml(writer, file);
                                 break;
                         }
                         return FileVisitResult.CONTINUE;
@@ -102,22 +95,17 @@ public class LucenePostIndexer {
                     Element element = (Element) node;
                     int postId = Integer.parseInt(element.getAttribute("Id"));
                     int postTypeId = 1; // 1: question, 2: answer, 3: comment
-                    String Title = element.getAttribute("Title");
-                    String Tags = element.getAttribute("Tags");
                     String Body = element.getAttribute("Body");
 
                     // create Lucene Document and add fields
                     Document luceneDoc = new Document();
                     luceneDoc.add(new IntField("PostId", postId, Field.Store.YES));
                     luceneDoc.add(new StoredField("PostTypeId", postTypeId));
-                    luceneDoc.add(new StoredField("Title", Title));
-                    luceneDoc.add(new StoredField("Tags", Tags));
                     luceneDoc.add(new StoredField("Body", Body));
                     // write doc to Lucene index
                     writer.addDocument(luceneDoc);
                 }
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -134,8 +122,7 @@ public class LucenePostIndexer {
                 Node node = nodeList.item(i);
                 if (node.getNodeType() == Node.ELEMENT_NODE) {
                     Element element = (Element) node;
-                    int answerId = Integer.parseInt(element.getAttribute("Id"));
-                    int postId = Integer.parseInt(element.getAttribute("ParentId"));
+                    int postId = (split_QA)? Integer.parseInt(element.getAttribute("Id")):Integer.parseInt(element.getAttribute("ParentId"));
                     int postTypeId = 2; // 1: question, 2: answer, 3: comment
                     String Body = element.getAttribute("Body");
 
@@ -144,38 +131,6 @@ public class LucenePostIndexer {
                     luceneDoc.add(new IntField("PostId", postId, Field.Store.YES));
                     luceneDoc.add(new StoredField("PostTypeId", postTypeId));
                     luceneDoc.add(new StoredField("Body", Body));
-                    luceneDoc.add(new StoredField("AnswerId", answerId));
-                    // write doc to Lucene index
-                    writer.addDocument(luceneDoc);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static void indexCommentXml(IndexWriter writer, Path file) {
-        try {
-            System.out.println("Indexing dir:" + file.getParent().toString() + "\tfile: " + file.getFileName());
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            org.w3c.dom.Document xmlDoc = builder.parse(Files.newInputStream(file));
-            NodeList nodeList = xmlDoc.getElementsByTagName("row");
-            for (int i = 0; i < nodeList.getLength(); i++) {
-                Node node = nodeList.item(i);
-                if (node.getNodeType() == Node.ELEMENT_NODE) {
-                    Element element = (Element) node;
-                    int commentId = Integer.parseInt(element.getAttribute("Id"));
-                    int postId = Integer.parseInt(element.getAttribute("PostId"));
-                    int postTypeId = 3; // 1: question, 2: answer, 3: comment
-                    String Body = element.getAttribute("Text");
-
-                    // create Lucene Document and add fields
-                    Document luceneDoc = new Document();
-                    luceneDoc.add(new IntField("PostId", postId, Field.Store.YES));
-                    luceneDoc.add(new StoredField("PostTypeId", postTypeId));
-                    luceneDoc.add(new StoredField("Body", Body));
-                    luceneDoc.add(new StoredField("CommentId", commentId));
                     // write doc to Lucene index
                     writer.addDocument(luceneDoc);
                 }
@@ -207,75 +162,33 @@ public class LucenePostIndexer {
             long hit_num = results.totalHits.value;
             System.out.println(hit_num + " total matching content");
 
-            // write the search result to Json file
-            JSONObject Post = new JSONObject();
-            JSONArray Answers = new JSONArray();
-            JSONArray Comments = new JSONArray();
-            JSONObject question = new JSONObject();
+            StringBuilder question = new StringBuilder("Qustion:\n");
+            StringBuilder answer = new StringBuilder();
 
             for (ScoreDoc scoreDoc : results.scoreDocs) {
                 Document doc = searcher.doc(scoreDoc.doc);
-                int typeid = Integer.parseInt(doc.get("PostTypeId"));
-                switch (typeid) {
-                    case 1:
-                        Post.put("PostId", doc.get("PostId"));
-                        question.put("Title", doc.get("Title"));
-                        question.put("Tags", doc.get("Tags"));
-                        question.put("Body", doc.get("Body"));
+                int type = Integer.parseInt(doc.get("PostTypeId"));
+                int ansnum = 1;
+                switch (type) {
+                    case 1: // question
+                        question.append(doc.get("Body"));
                         break;
-                    case 2:
-                        JSONObject answer = new JSONObject();
-                        JSONArray answer_coments = Query_Answer_Comments(doc.get("AnswerId"), index_path);
-                        answer.put("AnswerId", doc.get("AnswerId"));
-                        answer.put("Body", doc.get("Body"));
-                        answer.put("Comments", answer_coments);
-                        Answers.put(answer);
-                        break;
-                    case 3:
-                        JSONObject comment = new JSONObject();
-                        comment.put("CommentId", doc.get("CommentId"));
-                        comment.put("Body", doc.get("Body"));
-                        Comments.put(comment);
+                    case 2: // answer
+                        answer.append("Answer ").append(ansnum).append(":\n").append(doc.get("Body"));
                         break;
                 }
             }
-            question.put("Comments", Comments);
-            Post.put("Question", question);
-            Post.put("Answers", Answers);
 
-            String save_json = res_dir + "/" + PostId + ".json";
+            String save_json = res_dir + "/" + PostId + ".txt";
             FileWriter file = new FileWriter(save_json, StandardCharsets.UTF_8);
-            file.write(Post.toString());
+            file.write(question.toString());
+            file.write(answer.toString());
             file.close();
-            System.out.println("Successfully saved JSON Object to:" + save_json);
+            System.out.println("Successfully saved post body to:" + save_json);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public static JSONArray Query_Answer_Comments(String AnswerId, String index_path) {
-        JSONArray Comments = new JSONArray();
-        try {
-            IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index_path)));
-            IndexSearcher searcher = new IndexSearcher(reader);
-
-            Query query = IntField.newExactQuery("PostId", Integer.parseInt(AnswerId));
-            TopDocs results = searcher.search(query, Integer.MAX_VALUE);
-            long hit_num = results.totalHits.value;
-            // write the search result to Json file
-            for (ScoreDoc scoreDoc : results.scoreDocs) {
-                Document doc = searcher.doc(scoreDoc.doc);
-                JSONObject comment = new JSONObject();
-                comment.put("CommentId", doc.get("CommentId"));
-                comment.put("Body", doc.get("Body"));
-                Comments.put(comment);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return Comments;
-
     }
 
     protected static void read_config() throws Exception {
@@ -293,6 +206,8 @@ public class LucenePostIndexer {
     /**
      * offline version:
      * build lucene index for posts from SO.
+     * **need arguments**:
+     * - split_QA: "True" or "False"
      * online version:
      * given a post_id, search related content of the post by lucene index,
      * including question, answer and comments
@@ -311,13 +226,16 @@ public class LucenePostIndexer {
         String mode = args[0];
         if (mode.equals("-offline")) {
             // Step 1: build index for Posts
+            if (arg_len < 2) {
+                throw new IllegalArgumentException("missing argument: split_QA");
+            }
+            if(args[1].equals("True")) split_QA = true;
             start = System.currentTimeMillis();
             buildIndex4Posts(post_dump_dic, index_dir);
             end = System.currentTimeMillis();
             System.out.println("Time Cost:" + (end - start) + "ms"); // 319597ms (5.33min)
         } else if (mode.equals("-online")) {
             // Step 2: get post content by PostId
-            // hibernate_class_1:520902; hibernate_class_4:970573;
             if (arg_len < 2) {
                 throw new IllegalArgumentException("missing argument: post_id");
             }
@@ -327,9 +245,9 @@ public class LucenePostIndexer {
             int PostId = Integer.parseInt(args[1]);
             String res_path = exp_path + args[2];
 
-            start = System.currentTimeMillis();
+//            start = System.currentTimeMillis();
             search(PostId, index_dir, res_path);
-            end = System.currentTimeMillis();
+//            end = System.currentTimeMillis();
             // System.out.println("Time Cost:" + (end - start) + "ms"); // 1175ms
         } else {
             throw new IllegalArgumentException("invalid argument!");

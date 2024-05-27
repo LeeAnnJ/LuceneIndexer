@@ -99,6 +99,7 @@ public class LuceneCodeIndexer {
             DocumentBuilder builder = factory.newDocumentBuilder();
 
             for(File file:file_list){
+                System.out.println("Indexing dir:" + file.getParent().toString() + "\tfile: " + file.getName());
                 org.w3c.dom.Document xmlDoc = builder.parse(file);
                 NodeList nodeList = xmlDoc.getElementsByTagName("code");
                 for (int i = 0; i < nodeList.getLength(); i++) {

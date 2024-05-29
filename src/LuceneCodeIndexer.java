@@ -110,6 +110,7 @@ public class LuceneCodeIndexer {
                     addContent2Index(writer,code,postid);
                 }
             }
+            writer.close();
         } catch (Exception e) {
             e.printStackTrace();
         }

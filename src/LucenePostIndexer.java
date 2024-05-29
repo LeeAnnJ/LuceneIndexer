@@ -36,7 +36,7 @@ public class LucenePostIndexer {
     private static String exp_path = "";
     private static String post_dump_dic = "";
     private static String index_dir = "";
-    private static boolean split_QA = true;
+    private static boolean split_QA = false;
 
     public static void buildIndex4Posts(String posts_path, String index_path) {
         // judge if the path is a directory
@@ -75,7 +75,6 @@ public class LucenePostIndexer {
                     }
                 });
             }
-
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -165,15 +164,16 @@ public class LucenePostIndexer {
             StringBuilder question = new StringBuilder("Qustion:\n");
             StringBuilder answer = new StringBuilder();
 
+            int ansnum = 0;
             for (ScoreDoc scoreDoc : results.scoreDocs) {
                 Document doc = searcher.doc(scoreDoc.doc);
                 int type = Integer.parseInt(doc.get("PostTypeId"));
-                int ansnum = 1;
                 switch (type) {
                     case 1: // question
                         question.append(doc.get("Body"));
                         break;
                     case 2: // answer
+                        ansnum += 1;
                         answer.append("Answer ").append(ansnum).append(":\n").append(doc.get("Body"));
                         break;
                 }

@@ -116,39 +116,6 @@ public class LuceneCodeIndexer {
         }
     }
 
-//    /**
-//     * Index a code xml.
-//     */
-//    private static void indexCodeXml(IndexWriter writer, Path file) {
-//        try {
-//            System.out.println("Indexing file: " + file.getFileName());
-//            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-//            DocumentBuilder builder = factory.newDocumentBuilder();
-//            org.w3c.dom.Document xmlDoc = builder.parse(Files.newInputStream(file));
-//            NodeList nodeList = xmlDoc.getElementsByTagName("code");
-//            for (int i = 0; i < nodeList.getLength(); i++) {
-//                Node node = nodeList.item(i);
-//                Element element = (Element) node;
-//                String codeId = element.getAttribute("CodeId");
-//                String postId = element.getAttribute("PostId");
-//                // String postTypeId = element.getAttribute("PostTypeId");
-//                String code = element.getAttribute("Code");
-//
-//                // create Lucene Document & set fields
-//                Document luceneDoc = new Document();
-//                luceneDoc.add(new StoredField("CodeId", codeId));
-//                luceneDoc.add(new StoredField("PostId", postId));
-//                // luceneDoc.add(new StoredField("PostTypeId", postTypeId));
-//                luceneDoc.add(new TextField("Code", code, Field.Store.YES));
-//                // add document to Lucene Index
-//                writer.addDocument(luceneDoc);
-//            }
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-
     /**
      * Search the top-k similar cides for queries based on the Lucene index.
      *
@@ -236,9 +203,8 @@ public class LuceneCodeIndexer {
         Properties properties = new Properties();
         try {
             properties.load(new FileInputStream(config_file));
-            exp_path = properties.getProperty("EXP_PATH");
-            code_xml_dir = exp_path + properties.getProperty("SO_CODE_FOLDER");
-            index_dir = exp_path + properties.getProperty("CODE_LUCENE_INDEX");
+            code_xml_dir = properties.getProperty("SO_CODE_FOLDER");
+            index_dir = properties.getProperty("CODE_LUCENE_INDEX");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -277,10 +243,10 @@ public class LuceneCodeIndexer {
             }
             if(args[1].equals("True")) split_QA = true;
             if(args[2].equals("True")) split_code = true;
-            start = System.currentTimeMillis();
+//            start = System.currentTimeMillis();
             buildIndex4CodeXmls(code_xml_dir, index_dir);
-            end = System.currentTimeMillis();
-            System.out.println("Time Cost:" + (end - start) + "ms"); // Time Cost:362714ms
+//            end = System.currentTimeMillis();
+//            System.out.println("Time Cost:" + (end - start) + "ms"); // Time Cost:362714ms
         } else if (mode.equals("-online")) {
             // Step 2: search for the top k similar code snippets for queries
             if (arg_len < 2) {
@@ -296,10 +262,7 @@ public class LuceneCodeIndexer {
             String query_file = exp_path + args[1];
             int topk = Integer.parseInt(args[2]);
             String cs_path = args[3];
-//            start = System.currentTimeMillis();
             search(index_dir, query_file, topk, cs_path);
-//            end = System.currentTimeMillis();
-            // System.out.println("Time Cost:" + (end - start) + "ms");
         }
     }
 }

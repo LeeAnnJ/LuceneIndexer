@@ -195,9 +195,8 @@ public class LucenePostIndexer {
         Properties properties = new Properties();
         try {
             properties.load(new FileInputStream(config_file));
-            exp_path = properties.getProperty("EXP_PATH");
-            post_dump_dic = exp_path + properties.getProperty("POST_DUMP_DIC");
-            index_dir = exp_path + properties.getProperty("POST_LUCENE_INDEX");
+            post_dump_dic = properties.getProperty("POST_DUMP_DIC");
+            index_dir = properties.getProperty("POST_LUCENE_INDEX");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -230,10 +229,10 @@ public class LucenePostIndexer {
                 throw new IllegalArgumentException("missing argument: split_QA");
             }
             if(args[1].equals("True")) split_QA = true;
-            start = System.currentTimeMillis();
+//            start = System.currentTimeMillis();
             buildIndex4Posts(post_dump_dic, index_dir);
-            end = System.currentTimeMillis();
-            System.out.println("Time Cost:" + (end - start) + "ms"); // 319597ms (5.33min)
+//            end = System.currentTimeMillis();
+//            System.out.println("Time Cost:" + (end - start) + "ms"); // 319597ms (5.33min)
         } else if (mode.equals("-online")) {
             // Step 2: get post content by PostId
             if (arg_len < 2) {
@@ -244,11 +243,7 @@ public class LucenePostIndexer {
             }
             int PostId = Integer.parseInt(args[1]);
             String res_path = exp_path + args[2];
-
-//            start = System.currentTimeMillis();
             search(PostId, index_dir, res_path);
-//            end = System.currentTimeMillis();
-            // System.out.println("Time Cost:" + (end - start) + "ms"); // 1175ms
         } else {
             throw new IllegalArgumentException("invalid argument!");
         }

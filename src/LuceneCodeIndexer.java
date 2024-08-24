@@ -1,3 +1,4 @@
+import analyzer.SNERAnalyzer;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -132,7 +133,8 @@ public class LuceneCodeIndexer {
             IndexSearcher searcher = new IndexSearcher(reader);
             // use BM25 as the similarity function
             searcher.setSimilarity(new BM25Similarity());
-            Analyzer analyzer = new StandardAnalyzer();
+//            Analyzer analyzer = new StandardAnalyzer();
+            SNERAnalyzer analyzer = new SNERAnalyzer();
             QueryParser parser = new QueryParser("Code", analyzer); // Code is the search field
             // get query code string
             String query_code = readFileAsString(query_file);

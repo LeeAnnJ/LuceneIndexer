@@ -37,6 +37,7 @@ import java.util.Properties;
 
 public class LuceneCodeIndexer {
     private static String config_file = "./config/file_structure.ini";
+    private static String tokenizer = "";
     private static String exp_path = "";
     private static String code_xml_dir = "";
     private static String index_dir = "";
@@ -92,7 +93,9 @@ public class LuceneCodeIndexer {
         Arrays.sort(file_list, Comparator.comparing(File::getName));
         try{
             Directory dir = FSDirectory.open(Paths.get(index_path));
-            Analyzer analyzer = new StandardAnalyzer();
+            Analyzer analyzer;
+            if (tokenizer.equals("S-NER")) analyzer = new SNERAnalyzer();
+            else analyzer = new StandardAnalyzer();
             IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
             iwc.setOpenMode(OpenMode.CREATE);
             IndexWriter writer = new IndexWriter(dir, iwc);
@@ -100,7 +103,7 @@ public class LuceneCodeIndexer {
             DocumentBuilder builder = factory.newDocumentBuilder();
 
             for(File file:file_list){
-                System.out.println("Indexing dir:" + file.getParent().toString() + "\tfile: " + file.getName());
+                System.out.println("Indexing dir:" + file.getParent() + "\tfile: " + file.getName());
                 org.w3c.dom.Document xmlDoc = builder.parse(file);
                 NodeList nodeList = xmlDoc.getElementsByTagName("code");
                 for (int i = 0; i < nodeList.getLength(); i++) {
@@ -133,8 +136,9 @@ public class LuceneCodeIndexer {
             IndexSearcher searcher = new IndexSearcher(reader);
             // use BM25 as the similarity function
             searcher.setSimilarity(new BM25Similarity());
-//            Analyzer analyzer = new StandardAnalyzer();
-            SNERAnalyzer analyzer = new SNERAnalyzer();
+            Analyzer analyzer;
+            if (tokenizer.equals("S-NER")) analyzer = new SNERAnalyzer();
+            else analyzer = new StandardAnalyzer();
             QueryParser parser = new QueryParser("Code", analyzer); // Code is the search field
             // get query code string
             String query_code = readFileAsString(query_file);
@@ -207,6 +211,7 @@ public class LuceneCodeIndexer {
             properties.load(new FileInputStream(config_file));
             code_xml_dir = properties.getProperty("SO_CODE_FOLDER");
             index_dir = properties.getProperty("CODE_LUCENE_INDEX");
+            tokenizer = properties.getProperty("TOKENIZER");
         } catch (IOException e) {
             e.printStackTrace();
         }

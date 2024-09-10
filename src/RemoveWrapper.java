@@ -24,8 +24,8 @@ public class RemoveWrapper {
     public static void preprocessed_Dataset() throws IOException {
         String[] datasetNames = { "StatType-SO", "Short-SO" };
         String[] libs = { "android", "gwt", "hibernate", "joda_time", "jdk", "xstream" };
-        String dataset_path = "/home/zhangn279/laj/CK4TI/Dataset_without_imports";
-        String outputDir = "/home/zhangn279/laj/CK4TI/Dataset_without_wrapperclasses";
+        String dataset_path = "../Dataset_without_imports";
+        String outputDir = "../Dataset_without_wrapperclasses";
 
         for (String dataset : datasetNames) {
             for (String lib : libs) {

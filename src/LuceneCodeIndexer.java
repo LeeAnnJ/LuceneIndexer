@@ -36,7 +36,7 @@ import java.util.Comparator;
 import java.util.Properties;
 
 public class LuceneCodeIndexer {
-    private static String config_file = "./config/file_structure.ini";
+    private static String config_file = "./config/path_config.ini";
     private static String tokenizer = "";
     private static String exp_path = "";
     private static String code_xml_dir = "";

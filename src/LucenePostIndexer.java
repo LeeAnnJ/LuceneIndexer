@@ -32,7 +32,7 @@ import java.util.HashMap;
 import java.util.Properties;
 
 public class LucenePostIndexer {
-    private static String config_file = "./config/file_structure.ini";
+    private static String config_file = "./config/path_config.ini";
     private static String exp_path = "";
     private static String post_dump_dic = "";
     private static String index_dir = "";

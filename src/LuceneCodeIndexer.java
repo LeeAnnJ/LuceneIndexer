@@ -174,19 +174,21 @@ public class LuceneCodeIndexer {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                             throws IOException {
-                    Files.delete(file);
-                    return FileVisitResult.CONTINUE;
+                        Files.delete(file);
+                        return FileVisitResult.CONTINUE;
                     }
                 });
             }
 
+            int dotIndex = index_path.lastIndexOf('.');
+            String extension_name = index_path.substring(dotIndex);
             for (int i = 0; i < hits.length; i++) {
                 Document doc = searcher.doc(hits[i].doc);
                 String code = doc.get("Code");
                 String postId = doc.get("PostId");
                 float score = hits[i].score;
 
-                String csName =  postId + "_" + score / maxscore + ".java";
+                String csName =  postId + "_" + score / maxscore + extension_name;
                 Path cs_file = Paths.get(cs_dic, csName);
                 Files.write(cs_file, code.getBytes(StandardCharsets.UTF_8));
             }
